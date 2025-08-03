@@ -325,3 +325,36 @@ if not out_df.empty:
     )
 else:
     st.warning("No data extracted from the receipt")
+
+# Optional debug info (collapsed by default for cleaner mobile experience)
+with st.expander("🔍 Debug Info (Advanced)"):
+    st.write("**Available fields:**", list(fields.keys()))
+    
+    # Show all field values for debugging
+    st.write("**All field values:**")
+    for field_name, field_obj in fields.items():
+        if hasattr(field_obj, 'value') and field_obj.value:
+            st.write(f"- **{field_name}**: {field_obj.value}")
+    
+    if "Items" in fields:
+        st.write("**Number of items found:**", len(fields["Items"].value) if fields["Items"].value else 0)
+        if fields["Items"].value:
+            st.write("**First item fields:**", list(fields["Items"].value[0].value.keys()))
+            
+            # Show detailed item information
+            st.write("**Item details:**")
+            for i, item in enumerate(fields["Items"].value[:3]):  # Show first 3 items
+                st.write(f"Item {i+1}:")
+                for field_name, field_obj in item.value.items():
+                    if hasattr(field_obj, 'value') and field_obj.value:
+                        st.write(f"  - {field_name}: {field_obj.value}")
+                        
+    # Show raw content preview if available
+    if hasattr(res, 'content'):
+        st.write("**Raw text content (first 500 chars):**")
+        st.text(res.content[:500] + "..." if len(res.content) > 500 else res.content)
+            
+    st.write("**Extracted values:**")
+    st.write(f"- **Merchant**: '{merchant_name}'")
+    st.write(f"- **Date**: '{transaction_date}'")
+    st.write(f"- **Total**: '{total_amount}'")
