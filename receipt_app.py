@@ -14,7 +14,38 @@ except ImportError:
     pass  # python-dotenv not installed, that's okay
 
 # Title
-st.title("Receipt → CSV (Azure Form Recognizer)")
+st.title("📸 Receipt → CSV")
+st.markdown("*Parse receipts with Azure AI*")
+
+# Add mobile-friendly styling
+st.markdown("""
+<style>
+    /* Mobile-friendly adjustments */
+    .stFileUploader label {
+        font-size: 16px !important;
+        padding: 10px !important;
+    }
+    
+    .stDataFrame {
+        font-size: 14px;
+    }
+    
+    /* Make buttons more touch-friendly */
+    .stDownloadButton button {
+        padding: 10px 20px !important;
+        font-size: 16px !important;
+    }
+    
+    /* Improve spacing on mobile */
+    @media (max-width: 768px) {
+        .main .block-container {
+            padding-top: 2rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Check for required environment variables
 AZURE_ENDPOINT = os.getenv("AZURE_FORM_RECOGNIZER_ENDPOINT") or st.secrets.get("azure_endpoint", "")
@@ -43,15 +74,27 @@ if not AZURE_ENDPOINT or not AZURE_KEY:
     st.stop()
 
 # 1. Upload CSV template
-tpl = st.file_uploader("Upload CSV template", type="csv")
+st.subheader("1️⃣ Upload Template")
+tpl = st.file_uploader("Upload CSV template", type="csv", help="Upload your CSV template to define the output structure")
 if not tpl:
+    st.info("👆 Please upload a CSV template to get started")
     st.stop()
 df_tpl = pd.read_csv(tpl)
+st.success(f"✅ Template loaded with {len(df_tpl.columns)} columns")
 
 # 2. Capture or upload receipt image
-img = st.camera_input("Take a picture") or st.file_uploader("Or upload receipt", type=["jpg","png","jpeg"])
+st.subheader("2️⃣ Add Receipt")
+col1, col2 = st.columns([1, 1])
+
+with col1:
+    img_camera = st.camera_input("📸 Take Photo")
+    
+with col2:
+    img_upload = st.file_uploader("📁 Upload Image", type=["jpg","png","jpeg"])
+
+img = img_camera or img_upload
 if not img:
-    st.info("Awaiting image…")
+    st.info("📱 Take a photo or upload a receipt image to continue")
     st.stop()
 
 # 3. Read image bytes
@@ -259,10 +302,29 @@ if not out_df.empty:
         out_df["Item"] = out_df["Item"].astype(str)
 
 # 8. Display and download
-st.subheader("Parsed Receipt")
+st.subheader("3️⃣ Results")
 
-# Show debugging info in an expander
-with st.expander("🔍 Debug: Raw extracted fields"):
+# Show a preview of the extracted data
+if not out_df.empty:
+    st.success(f"✅ Extracted {len(out_df)} line items")
+    
+    # Mobile-friendly dataframe display
+    st.dataframe(out_df, use_container_width=True)
+    
+    # Download section
+    csv = out_df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        label="📥 Download CSV",
+        data=csv,
+        file_name="receipt.csv",
+        mime="text/csv",
+        use_container_width=True
+    )
+else:
+    st.warning("No data extracted from the receipt")
+
+# Optional debug info (collapsed by default for cleaner mobile experience)
+with st.expander("🔍 Debug Info (Advanced)"):
     st.write("**Available fields:**", list(fields.keys()))
     
     # Show all field values for debugging
@@ -293,8 +355,3 @@ with st.expander("🔍 Debug: Raw extracted fields"):
     st.write(f"- **Merchant**: '{merchant_name}'")
     st.write(f"- **Date**: '{transaction_date}'")
     st.write(f"- **Total**: '{total_amount}'")
-
-st.dataframe(out_df)
-
-csv = out_df.to_csv(index=False).encode("utf-8")
-st.download_button("Download CSV", csv, "receipt.csv", "text/csv")
