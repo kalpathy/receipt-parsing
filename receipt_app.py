@@ -84,21 +84,28 @@ st.success(f"✅ Template loaded with {len(df_tpl.columns)} columns")
 
 # 2. Capture or upload receipt image
 st.subheader("2️⃣ Add Receipt")
-col1, col2 = st.columns([1, 1])
 
-with col1:
-    img_camera = st.camera_input("📸 Take Photo")
-    
-with col2:
-    img_upload = st.file_uploader("📁 Upload Image", type=["jpg","png","jpeg"])
+# Upload option is always visible
+img_upload = st.file_uploader("📁 Upload Image", type=["jpg","png","jpeg"])
+
+# Camera option with toggle
+use_camera = st.checkbox("📸 Use Camera Instead", help="Toggle to show camera input")
+img_camera = None
+if use_camera:
+    img_camera = st.camera_input("� Take Photo")
 
 img = img_camera or img_upload
 if not img:
-    st.info("📱 Take a photo or upload a receipt image to continue")
+    st.info("📱 Upload a receipt image or use the camera to continue")
     st.stop()
 
-# Display the uploaded/captured image
-st.image(img, caption="📸 Receipt Image", use_container_width=True)
+# Display the uploaded/captured image as a thumbnail with expandable view
+col1, col2 = st.columns([1, 3])
+with col1:
+    st.image(img, caption="📸 Receipt", width=150)
+with col2:
+    with st.expander("🔍 View Full Size Image"):
+        st.image(img, caption="📸 Receipt Image", use_container_width=True)
 
 # 3. Read image bytes
 if hasattr(img, "read"):
