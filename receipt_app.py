@@ -97,6 +97,9 @@ if not img:
     st.info("📱 Take a photo or upload a receipt image to continue")
     st.stop()
 
+# Display the uploaded/captured image
+st.image(img, caption="📸 Receipt Image", use_column_width=True)
+
 # 3. Read image bytes
 if hasattr(img, "read"):
     img_bytes = img.read()
