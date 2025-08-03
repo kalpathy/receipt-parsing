@@ -3,3 +3,4 @@ pandas
 pillow
 azure-ai-formrecognizer
 python-dotenv
+qrcode[pil]
