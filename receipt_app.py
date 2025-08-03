@@ -98,7 +98,7 @@ if not img:
     st.stop()
 
 # Display the uploaded/captured image
-st.image(img, caption="📸 Receipt Image", use_column_width=True)
+st.image(img, caption="📸 Receipt Image", use_container_width=True)
 
 # 3. Read image bytes
 if hasattr(img, "read"):
